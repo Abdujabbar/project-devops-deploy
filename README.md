@@ -144,6 +144,20 @@ docker buildx create --use   # one-time builder setup
 make docker-buildx           # builds + pushes linux/amd64 + linux/arm64
 ```
 
+## Continuous integration (GitHub Actions)
+
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) runs on every `push` and `pull_request` targeting `main`:
+
+1. **test** — sets up JDK 21 and runs `./gradlew test`.
+2. **build-and-push** — runs only after `test` passes. It builds the Docker image, tags it `:sha-<commit>` and `:latest`, and pushes both to Docker Hub. On pull requests the image is built but **not** pushed (publishing is reserved for merges into `main`).
+
+For the push step to work, add two repository secrets under **Settings → Secrets and variables → Actions**:
+
+| Secret               | Value                                                                          |
+|----------------------|--------------------------------------------------------------------------------|
+| `DOCKERHUB_USERNAME` | Your Docker Hub username (`abdujabbar`).                                        |
+| `DOCKERHUB_TOKEN`    | A Docker Hub access token (Account Settings → Security → New Access Token).     |
+
 ## Frontend
 
 ### Development
