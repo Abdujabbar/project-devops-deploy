@@ -93,6 +93,57 @@ All other variables supported by Spring Boot can be overridden the same way; che
 
 See [Makefile](./Makefile)
 
+## Docker image
+
+The backend ships with a multi-stage `Dockerfile` (Gradle build → slim Alpine JRE runtime, ~150 MB). Building, tagging, and publishing to Docker Hub are wired into the [Makefile](./Makefile). Defaults live at the top of the Makefile and can be overridden inline:
+
+| Variable          | Description                   | Default                 |
+|-------------------|-------------------------------|-------------------------|
+| `DOCKER_USER`     | Docker Hub username/namespace | `abdujabbar`            |
+| `IMAGE_NAME`      | Repository name               | `bulletins`             |
+| `TAG`             | Image tag                     | current git short SHA   |
+| `DOCKER_REGISTRY` | Registry host                 | `docker.io`             |
+
+### Build and run locally
+
+```bash
+make docker-build      # builds <user>/bulletins:<git-sha> and :latest
+```
+
+Run the image directly (dev profile, in-memory H2):
+
+```bash
+docker run --rm -p 8080:8080 -p 9090:9090 abdujabbar/bulletins:latest
+```
+
+Or run the full stack (backend + PostgreSQL, prod profile) via [compose.yaml](./compose.yaml):
+
+```bash
+docker compose up --build
+```
+
+### Release to Docker Hub
+
+```bash
+make docker-login      # once per machine
+make docker-release    # build + tag + push :<git-sha> and :latest
+```
+
+Override variables inline when needed, e.g. a fixed version tag:
+
+```bash
+make docker-release TAG=v1.0.0
+```
+
+### Multi-architecture images
+
+`make docker-build` / `docker-release` produce a single-arch image for your machine. If you build on Apple Silicon (arm64) but deploy to an amd64 server, publish a multi-arch image instead:
+
+```bash
+docker buildx create --use   # one-time builder setup
+make docker-buildx           # builds + pushes linux/amd64 + linux/arm64
+```
+
 ## Frontend
 
 ### Development
